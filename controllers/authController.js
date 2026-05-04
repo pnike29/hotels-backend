@@ -15,17 +15,15 @@ exports.register = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const photo = req.file ? req.file.path : "";
     const user = await User.create({ nom, email, password: hashed, photo });
-    res
-      .status(201)
-      .json({
-        message: "Compte créé avec succès",
-        user: {
-          id: user._id,
-          nom: user.nom,
-          email: user.email,
-          photo: user.photo,
-        },
-      });
+    res.status(201).json({
+      message: "Compte créé avec succès",
+      user: {
+        id: user._id,
+        nom: user.nom,
+        email: user.email,
+        photo: user.photo,
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -61,13 +59,12 @@ exports.login = async (req, res) => {
   }
 };
 
-
-
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Utilisateur introuvable" });
+    if (!user)
+      return res.status(400).json({ message: "Utilisateur introuvable" });
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetToken = resetToken;
@@ -83,6 +80,21 @@ exports.forgotPassword = async (req, res) => {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS,
       },
+    });
+
+    try {
+      await transporter.verify();
+      console.log("SMTP connecté");
+    } catch (err) {
+      console.error("SMTP ERROR:", err);
+      return res.status(500).json({ message: "Erreur configuration email" });
+    }
+
+    await transporter.sendMail({
+      from: `"RED PRODUCT" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Réinitialisation de votre mot de passe",
+      html: `<a href="${resetUrl}">Réinitialiser</a>`,
     });
 
     await transporter.sendMail({
