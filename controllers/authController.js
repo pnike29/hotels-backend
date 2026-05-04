@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 exports.register = async (req, res) => {
   try {
@@ -60,18 +61,52 @@ exports.login = async (req, res) => {
   }
 };
 
+
+
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "Utilisateur introuvable" });
+    if (!user) return res.status(400).json({ message: "Utilisateur introuvable" });
+
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetToken = resetToken;
     user.resetTokenExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
-    res.json({ message: "Token de réinitialisation généré", resetToken });
+
+    // URL de reset — pointe vers ta page Vercel
+    const resetUrl = `https://red-product-woad.vercel.app/reset-password.html?token=${resetToken}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"RED PRODUCT" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Réinitialisation de votre mot de passe",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto;">
+          <h2 style="color: #494C4F;">RED PRODUCT</h2>
+          <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+          <p>Cliquez sur le bouton ci-dessous pour le modifier :</p>
+          <a href="${resetUrl}" 
+             style="display:inline-block; background:#494C4F; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; margin: 20px 0;">
+            Réinitialiser mon mot de passe
+          </a>
+          <p style="color:#999; font-size:12px;">Ce lien expire dans 10 minutes.</p>
+          <p style="color:#999; font-size:12px;">Si vous n'avez pas demandé ceci, ignorez cet email.</p>
+        </div>
+      `,
+    });
+
+    res.json({ message: "Email envoyé avec succès" });
   } catch (error) {
+    console.error("Erreur email:", error);
     res.status(500).json({ error: error.message });
   }
 };
