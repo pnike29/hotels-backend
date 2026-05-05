@@ -85,7 +85,7 @@ exports.forgotPassword = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"RED PRODUCT" <${process.env.BREVO_USER}>`,
+      from: `"RED PRODUCT" <aa47c4001@smtp-brevo.com>`,
       to: email,
       subject: "Réinitialisation de votre mot de passe",
       html: `
