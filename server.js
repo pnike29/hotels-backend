@@ -9,13 +9,6 @@ const hotelRoutes = require("./routes/hotelRoutes");
 
 const app = express();
 
-const corsOptions = {
-  origin: ["http://127.0.0.1:5500", "http://localhost:5500"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
 app.use(
   cors({
     origin: [
@@ -28,6 +21,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
