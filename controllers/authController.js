@@ -71,30 +71,17 @@ exports.forgotPassword = async (req, res) => {
     user.resetTokenExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    // URL de reset — pointe vers ta page Vercel
     const resetUrl = `https://red-product-woad.vercel.app/reset-password.html?token=${resetToken}`;
 
+    // ✅ port 587 au lieu de 465
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS,
       },
-    });
-
-    try {
-      await transporter.verify();
-      console.log("SMTP connecté");
-    } catch (err) {
-      console.error("SMTP ERROR:", err);
-      return res.status(500).json({ message: "Erreur configuration email" });
-    }
-
-    await transporter.sendMail({
-      from: `"RED PRODUCT" <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: "Réinitialisation de votre mot de passe",
-      html: `<a href="${resetUrl}">Réinitialiser</a>`,
     });
 
     await transporter.sendMail({
@@ -143,7 +130,7 @@ exports.resetPassword = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const hotels = await Hotel.find(); // pas de limite ici
+    // ✅ supprimé Hotel.find() qui causait une erreur
     const users = await User.find()
       .select("-password")
       .sort({ _id: -1 })
