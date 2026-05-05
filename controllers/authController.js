@@ -75,17 +75,17 @@ exports.forgotPassword = async (req, res) => {
 
     // ✅ port 587 au lieu de 465
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: "smtp-relay.brevo.com",
       port: 587,
       secure: false,
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS,
       },
     });
 
     await transporter.sendMail({
-      from: `"RED PRODUCT" <${process.env.GMAIL_USER}>`,
+      from: `"RED PRODUCT" <${process.env.BREVO_USER}>`,
       to: email,
       subject: "Réinitialisation de votre mot de passe",
       html: `
