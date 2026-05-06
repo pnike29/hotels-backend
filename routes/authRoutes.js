@@ -10,9 +10,11 @@ const {
   getUsers,
   updatePhoto,
   countUsers,
+  activateAccount,
 } = require("../controllers/authController");
 
 router.post("/register", upload.single("photo"), register);
+
 router.post("/login", login);
 router.get("/activate/:token", activateAccount); // ← ajoute ça
 router.post("/forgot-password", forgotPassword);
