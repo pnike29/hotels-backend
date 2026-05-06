@@ -5,8 +5,13 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   photo: { type: String, default: "" },
-  resetToken: String,
-  resetTokenExpire: Date,
+  isActive: { type: Boolean, default: false },
+  activationToken: { type: String, default: null },
+  resetToken: { type: String, default: null },
+  resetTokenExpire: { type: Date, default: null },
 });
+
+// Force suppression du cache Mongoose
+mongoose.deleteModel(/User/);
 
 module.exports = mongoose.model("User", userSchema);
