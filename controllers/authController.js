@@ -16,7 +16,10 @@ exports.register = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const photo = req.file ? req.file.path : "";
-
+const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", { ... });
+console.log("Brevo status:", brevoRes.status);
+const brevoData = await brevoRes.json();
+console.log("Brevo response:", brevoData);
     // Générer le token d'activation
     const activationToken = crypto.randomBytes(32).toString("hex");
 
@@ -77,7 +80,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Utilisateur introuvable" });
 
     // ← Vérification activation
-    if (!user.isActive) {
+    if (user.isActive !== true) {
       return res
         .status(403)
         .json({ message: "Compte non activé. Vérifiez votre email." });
