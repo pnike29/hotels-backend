@@ -12,9 +12,9 @@ const {
   countUsers,
 } = require("../controllers/authController");
 
-
 router.post("/register", upload.single("photo"), register);
 router.post("/login", login);
+router.get("/activate/:token", activateAccount); // ← ajoute ça
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 router.get("/users", authMiddleware, getUsers);
@@ -25,6 +25,5 @@ router.put(
   upload.single("photo"),
   updatePhoto,
 );
-
 
 module.exports = router;
