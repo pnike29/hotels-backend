@@ -2,7 +2,6 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 
 exports.register = async (req, res) => {
   try {
@@ -73,35 +72,35 @@ exports.forgotPassword = async (req, res) => {
 
     const resetUrl = `https://red-product-woad.vercel.app/reset-password.html?token=${resetToken}`;
 
-    // ✅ port 587 au lieu de 465
-    const transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.BREVO_USER,
-        pass: process.env.BREVO_PASS,
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
       },
+      body: JSON.stringify({
+        sender: { name: "RED PRODUCT", email: "baabou073@gmail.com" },
+        to: [{ email }],
+        subject: "Réinitialisation de votre mot de passe",
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto;">
+            <h2 style="color: #494C4F;">RED PRODUCT</h2>
+            <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+            <a href="${resetUrl}" 
+               style="display:inline-block; background:#494C4F; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; margin: 20px 0;">
+              Réinitialiser mon mot de passe
+            </a>
+            <p style="color:#999; font-size:12px;">Ce lien expire dans 10 minutes.</p>
+          </div>
+        `,
+      }),
     });
 
-    await transporter.sendMail({
-      from: `"RED PRODUCT" <aa47c4001@smtp-brevo.com>`,
-      to: email,
-      subject: "Réinitialisation de votre mot de passe",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto;">
-          <h2 style="color: #494C4F;">RED PRODUCT</h2>
-          <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-          <p>Cliquez sur le bouton ci-dessous pour le modifier :</p>
-          <a href="${resetUrl}" 
-             style="display:inline-block; background:#494C4F; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; margin: 20px 0;">
-            Réinitialiser mon mot de passe
-          </a>
-          <p style="color:#999; font-size:12px;">Ce lien expire dans 10 minutes.</p>
-          <p style="color:#999; font-size:12px;">Si vous n'avez pas demandé ceci, ignorez cet email.</p>
-        </div>
-      `,
-    });
+    if (!response.ok) {
+      const errData = await response.json();
+      console.error("Brevo error:", errData);
+      return res.status(500).json({ message: "Erreur envoi email" });
+    }
 
     res.json({ message: "Email envoyé avec succès" });
   } catch (error) {
@@ -130,7 +129,6 @@ exports.resetPassword = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    // ✅ supprimé Hotel.find() qui causait une erreur
     const users = await User.find()
       .select("-password")
       .sort({ _id: -1 })
